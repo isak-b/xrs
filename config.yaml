@@ -8,15 +8,32 @@ avatars:
   system: "🔧"
   error: "❌"
 
+prompt: >
+  You are a helpful assistant.
+
 tools:
   # Create answer
   - type: "function"
     function:
       name: "create_answer"
-      description: "Answer a question"
+      description: "Use gpt-3.5 to generate a text-based response based on the prompt"
+      parameters:
+        type: "object"
+        properties: 
+          revised_prompt:
+            type: "string"
+            description: "Tailor the prompt to gpt-3.5's capabilities. This model should only focus on the part of the question that deals with text generation. The answer must be written in the same language as the original question."
+        required": ["revised_prompt"]
 
   # Create image
   - type: "function"
     function:
       name: "create_image"
-      description: "Generate an image"
+      description: "Use dall-e-3 to generate an image based on the prompt"
+      parameters:
+        type: "object"
+        properties: 
+          revised_prompt:
+            type: "string"
+            description: "Tailor the prompt to dall-e-3's capabilities. This model should only focus on the part of the question that deals with image generation, avoid using text."
+        required": ["revised_prompt"]

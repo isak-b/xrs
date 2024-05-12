@@ -44,15 +44,22 @@ def main():
 
             # Get answer
             response = bot.chat(state.history)
-            if response["role"] == "error":
-                placeholder.markdown("Error:")
-                display_msg(response)
-            else:
-                placeholder.markdown(response["content"])
-                if "url" in response:
-                    st.image(response["url"])
 
-            state.history.append(response)
+            # Display answer(s)
+            for i, answer in enumerate(response):
+                if i == 0:
+                    if answer["role"] == "error":
+                        placeholder.markdown("Error:")
+                        display_msg(answer)
+                    else:
+                        placeholder.markdown(answer["content"])
+                else:
+                    display_msg(answer)
+
+                if "url" in answer:
+                    st.image(answer["url"])
+
+                state.history.append(answer)
 
 
 if __name__ == "__main__":
