@@ -1,35 +1,34 @@
 api_type: "openai"
-chat_model: "gpt-3.5-turbo"
-image_model: "dall-e-3"
+
+models:
+  chat: "gpt-3.5-turbo"
+  text: "gpt-3.5-turbo"
+  image: "dall-e-3"
 
 avatars:
   user: "👤"
   assistant: "🤖"
   system: "🔧"
-  error: "❌"
-
-prompt: >
-  You are a helpful assistant.
 
 tools:
   # Create answer
   - type: "function"
     function:
-      name: "create_answer"
-      description: "Use gpt-3.5 to generate a text-based response based on the prompt"
+      name: "text"
+      description: "This model can answer questions and generate text. It can't generate images, and should not be sent prompts about producing images."
       parameters:
         type: "object"
         properties: 
           revised_prompt:
             type: "string"
-            description: "Tailor the prompt to gpt-3.5's capabilities. This model should only focus on the part of the question that deals with text generation. The answer must be written in the same language as the original question."
+            description: "Tailor the prompt to gpt-3.5's capabilities. This model should only focus on the part of the question that deals with text generation. The prompt must be written in the same language as the original question."
         required": ["revised_prompt"]
 
   # Create image
   - type: "function"
     function:
-      name: "create_image"
-      description: "Use dall-e-3 to generate an image based on the prompt"
+      name: "image"
+      description: "This model can generate images. It can't answer questions or generate text, and should not be sent queries about producing text."
       parameters:
         type: "object"
         properties: 

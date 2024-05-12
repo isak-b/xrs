@@ -8,7 +8,7 @@ import sys
 PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src"))
 sys.path.insert(0, PATH)
 
-from src.api import get_client, check_client
+from src.client import get_client, check_client
 from src.bot import ChatBot
 from src.config import load_cfg
 
@@ -42,14 +42,14 @@ def main():
             with st.chat_message("assistant", avatar=state.cfg["avatars"]["assistant"]):
                 placeholder = st.image("assets/loading.gif")
 
-            # Get answer
+            # Get answer(s)
             response = bot.chat(state.history)
 
             # Display answer(s)
             for i, answer in enumerate(response):
                 if i == 0:
-                    if answer["role"] == "error":
-                        placeholder.markdown("Error:")
+                    if answer["role"] == "system":
+                        placeholder.markdown("System message:")
                         display_msg(answer)
                     else:
                         placeholder.markdown(answer["content"])

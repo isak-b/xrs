@@ -7,7 +7,7 @@ import sys
 PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src"))
 sys.path.insert(0, PATH)
 
-from src.api import get_client, check_client
+from src.client import get_client, check_client
 from src.config import load_cfg
 
 
