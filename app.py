@@ -13,11 +13,12 @@ from src.bot import ChatBot
 from src.config import load_cfg
 
 
-def display_msg(msg):
-    with st.chat_message(msg["role"], avatar=state.cfg["avatars"][msg["role"]]):
-        st.write(msg["content"])
-        if "url" in msg:
-            st.image(msg["url"])
+def display_msg(role: str, content: str, url: str = None, **_kwargs):
+    container = st.chat_message(role, avatar=state.cfg["avatars"][role])
+    if url:
+        container.image(url, caption=content)
+    else:
+        container.write(content)
 
 
 def main():
@@ -27,39 +28,34 @@ def main():
     if "history" not in state:
         state.history = []
 
+    # Print history
+    for msg in state.history:
+        display_msg(**msg)
+
     # Chat input
-    with st.container():
-        question = _bottom.chat_input("Skriv en fråga")
+    question = _bottom.chat_input("Write a question")
 
-        if question:
-            state.history.append({"role": "user", "content": question})
+    if question:
+        # Display question
+        user_msg = {"role": "user", "content": question}
+        state.history.append(user_msg)
+        display_msg(**user_msg)
 
-            # Display history
-            for msg in state.history:
-                display_msg(msg)
-
-            # Add placeholder to history while assistant is typing
-            with st.chat_message("assistant", avatar=state.cfg["avatars"]["assistant"]):
-                placeholder = st.image("assets/loading.gif")
-
-            # Get answer(s)
+        # Display spinner while assistant is typing
+        with st.spinner("Generating answer..."):
             response = bot.chat(state.history)
 
-            # Display answer(s)
-            for i, answer in enumerate(response):
-                if i == 0:
-                    if answer["role"] == "system":
-                        placeholder.markdown("System message:")
-                        display_msg(answer)
-                    else:
-                        placeholder.markdown(answer["content"])
-                else:
-                    display_msg(answer)
+        # Display answer(s)
+        for bot_msg in response:
+            display_msg(**bot_msg)
+            state.history.append(bot_msg)
 
-                if "url" in answer:
-                    st.image(answer["url"])
-
-                state.history.append(answer)
+    with st.sidebar:
+        st.write("model:")
+        bot.text["model"] = st.selectbox("select model", list(bot.text["models"]), label_visibility="collapsed")
+        st.write("tools:")
+        bot.text["active"] = st.checkbox("generate text", key="text", value=True)
+        bot.image["active"] = st.checkbox("generate image", key="image", value=True)
 
 
 if __name__ == "__main__":
@@ -67,6 +63,7 @@ if __name__ == "__main__":
         page_title="xrs",
         page_icon=":random:",
         layout="wide",
+        initial_sidebar_state="collapsed",
     )
     if "cfg" not in state:
         state.cfg = load_cfg()

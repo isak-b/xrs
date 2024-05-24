@@ -5,17 +5,29 @@ import json
 class ChatBot:
     def __init__(self, client, cfg: dict):
         self.client = client
-        self.models = cfg["models"]
+        self.tool_caller = cfg["tool_caller"]
+        self.text = cfg["text"]
+        self.image = cfg["image"]
         self.tools = cfg["tools"]
 
-    def chat(self, messages: list[dict], history_size: int = 10) -> list[dict]:
-        chat_messages = deepcopy(messages) if history_size is None else deepcopy(messages)[-history_size:]
+    def chat(self, messages, **kwargs) -> list[dict]:
+        if self.text["active"] is True and self.image["active"] is True:
+            return self.call_tools(messages, **kwargs)
+        elif self.text["active"] is True:
+            return [self.create_text(messages, **kwargs)]
+        elif self.image["active"] is True:
+            return [self.create_image(messages, **kwargs)]
+        else:
+            return [{"role": "assistant", "content": "Please select a tool"}]
+
+    def call_tools(self, messages: list[dict], history_size: int = 10) -> list[dict]:
         output = []
+        chat_messages = deepcopy(messages) if history_size is None else deepcopy(messages)[-history_size:]
         try:
-            response = self.client.query(messages=chat_messages, model=self.models["chat"], tools=self.tools)
+            response = self.client.create_text(messages=chat_messages, model=self.tool_caller, tools=self.tools)
             tool_calls = response.choices[0].message.tool_calls
             if tool_calls is None:
-                return [self.text(messages=messages)]
+                return [self.create_text(messages=messages)]
 
             for tool_call in tool_calls:
                 call_messages = deepcopy(messages)
@@ -25,15 +37,15 @@ class ChatBot:
                     call_messages = call_messages[:-1] + [{"role": "user", "content": revised_prompt}]
                 output.append(func(messages=call_messages))
         except Exception as e:
-            output.append({"role": "system", "content": e})
+            output.append({"role": "assistant", "content": e})
         return output
 
-    def text(self, messages: list[dict], history_size: int = 10) -> dict:
+    def create_text(self, messages: list[dict], history_size: int = 10) -> dict:
         text_messages = deepcopy(messages) if history_size is None else deepcopy(messages)[-history_size:]
         try:
             response = self.client.create_text(
                 messages=text_messages,
-                model=self.models["text"],
+                model=self.text["model"],
             )
             answer = response.choices[0].message.content
             output = {"role": "assistant", "content": answer}
@@ -41,7 +53,7 @@ class ChatBot:
             output = {"role": "system", "content": e}
         return output
 
-    def image(self, messages: list[dict], history_size: int = 3) -> dict:
+    def create_image(self, messages: list[dict], history_size: int = 10) -> dict:
         image_messages = deepcopy(messages) if history_size is None else deepcopy(messages)[-history_size:]
         prompt = ""
         for msg in image_messages:
@@ -49,7 +61,7 @@ class ChatBot:
         try:
             response = self.client.create_image(
                 prompt=prompt,
-                model=self.models["image"],
+                model=self.image["model"],
             )
             revised_prompt = response.data[0].revised_prompt
             url = response.data[0].url

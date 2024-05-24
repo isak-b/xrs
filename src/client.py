@@ -15,7 +15,6 @@ def get_client(api_type: str, api_key: str):
     client = None
     if api_type.lower() == "openai":
         client = OpenAI(api_key=api_key)
-        client.query = client.chat.completions.create
         client.create_text = client.chat.completions.create
         client.create_image = client.images.generate
         client.create_completion = client.completions.create
