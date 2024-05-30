@@ -50,7 +50,7 @@ class ChatBot:
             answer = response.choices[0].message.content
             output = {"role": "assistant", "content": answer}
         except Exception as e:
-            output = {"role": "system", "content": e}
+            output = {"role": "assistant", "content": e}
         return output
 
     def create_image(self, messages: list[dict], history_size: int = 10) -> dict:
@@ -67,5 +67,5 @@ class ChatBot:
             url = response.data[0].url
             output = {"role": "assistant", "content": revised_prompt, "url": url}
         except Exception as e:
-            output = {"role": "system", "content": e}
+            output = {"role": "assistant", "content": e}
         return output
